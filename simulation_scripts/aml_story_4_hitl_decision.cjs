@@ -25,38 +25,46 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function updateProcessLog(stepId, updates) {
-  const logPath = path.join(PUBLIC_DATA_DIR, `${PROCESS_ID}.json`);
-  const data = readJson(logPath) || { steps: [] };
+function updateProcessLog(newLog) {
+  const detailPath = path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`);
+  let detail = readJson(detailPath) || { logs: [], keyDetails: {}, sidebarArtifacts: [] };
   
-  const stepIdx = data.steps.findIndex(s => s.id === stepId);
-  if (stepIdx !== -1) {
-    Object.assign(data.steps[stepIdx], updates);
+  const existingIdx = detail.logs.findIndex(l => l.id === newLog.id && l.status === 'processing');
+  if (newLog.status !== 'processing' && existingIdx !== -1) {
+    detail.logs[existingIdx] = newLog;
+  } else if (newLog.status === 'processing') {
+    detail.logs = detail.logs.filter(l => !(l.id === newLog.id && l.status === 'processing'));
+    detail.logs.push(newLog);
+  } else {
+    detail.logs.push(newLog);
   }
   
-  writeJson(logPath, data);
+  if (newLog.keyDetailsUpdate) {
+    detail.keyDetails = { ...detail.keyDetails, ...newLog.keyDetailsUpdate };
+  }
+  
+  writeJson(detailPath, detail);
 }
 
 async function updateProcessListStatus(status) {
-  const API_URL = process.env.VITE_API_URL || 'http://localhost:3001';
-  
+  const API_URL = process.env.API_URL || 'http://localhost:3001';
   try {
     const response = await fetch(`${API_URL}/api/update-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ processId: PROCESS_ID, status })
     });
-    
-    if (!response.ok) throw new Error('API request failed');
-    console.log(`✓ Process list status updated to: ${status}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.log(`✓ Status: ${status}`);
   } catch (error) {
-    console.warn('API update failed, falling back to file write:', error.message);
-    
-    const statusPath = path.join(PUBLIC_DATA_DIR, 'process-status.json');
-    let statusData = readJson(statusPath) || {};
-    statusData[PROCESS_ID] = status;
-    writeJson(statusPath, statusData);
-    console.log(`✓ Process list status updated (file) to: ${status}`);
+    console.log(`API call failed, falling back to file write: ${error.message}`);
+    const casesFilePath = path.join(PUBLIC_DATA_DIR, 'processes.json');
+    let cases = readJson(casesFilePath) || [];
+    const caseIndex = cases.findIndex(c => c.id === PROCESS_ID);
+    if (caseIndex !== -1) {
+      cases[caseIndex].status = status;
+      writeJson(casesFilePath, cases);
+    }
   }
 }
 
@@ -283,7 +291,7 @@ const steps = [
 // ═══════════════════════════════════════════════════════════════════════════
 
 function initializeProcess() {
-  const logPath = path.join(PUBLIC_DATA_DIR, `${PROCESS_ID}.json`);
+  const logPath = path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`);
   
   const initialData = {
     processId: PROCESS_ID,
@@ -291,18 +299,15 @@ function initializeProcess() {
     name: 'Hartwell Manufacturing Inc — $840K Wire to Hong Kong',
     timestamp: 'Jun 9, 09:41 AM',
     category: 'aml-investigations',
-    keyDetails: [
-      { label: 'Subject', value: 'Hartwell Manufacturing Inc' },
-      { label: 'Alert ID', value: 'ALT-2025-06-0514' },
-      { label: 'Amount', value: '$840,000' },
-      { label: 'Counterparty', value: 'Zhengda Industrial Supply Co Ltd (Hong Kong)' },
-      { label: 'Risk Score', value: '65/100' },
-      { label: 'Priority', value: 'High — L2' }
-    ],
-    steps: steps.map(step => ({
-      ...step,
-      status: 'pending'
-    }))
+    keyDetails: {
+      subject: 'Hartwell Manufacturing Inc',
+      alertId: 'ALT-2025-06-0514',
+      amount: '$840,000',
+      counterparty: 'Zhengda Industrial Supply Co Ltd (Hong Kong)',
+      riskScore: '65/100',
+      priority: 'High — L2'
+    },
+    logs: []
   };
   
   writeJson(logPath, initialData);
@@ -326,19 +331,18 @@ async function main() {
     const step = steps[i];
     console.log(`\n[${step.id}] ${step.title_s}`);
 
-    await updateProcessLog(step.id, { status: 'processing' });
+    updateProcessLog({ id: step.id, timestamp: step.timestamp, title: step.title_p, reasoning: [], artifacts: [], status: 'processing' });
     await delay(2000);
 
-    await updateProcessLog(step.id, { status: 'success' });
+    updateProcessLog({ id: step.id, timestamp: step.timestamp, title: step.title_s, reasoning: step.reasoning, artifacts: step.artifacts, status: 'success' });
     await delay(1500);
     
     // Update risk score at step 7
     if (step.id === 'step7') {
-      const logPath = path.join(PUBLIC_DATA_DIR, `${PROCESS_ID}.json`);
+      const logPath = path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`);
       const data = readJson(logPath);
-      const riskDetail = data.keyDetails.find(d => d.label === 'Risk Score');
-      if (riskDetail) {
-        riskDetail.value = '82/100';
+      if (data && data.keyDetails) {
+        data.keyDetails.riskScore = '82/100';
       }
       writeJson(logPath, data);
       console.log('  ↳ Risk score updated to 82/100');
@@ -349,17 +353,17 @@ async function main() {
   const step8 = steps[7];
   console.log(`\n[${step8.id}] ${step8.title_s}`);
 
-  await updateProcessLog(step8.id, { status: 'processing' });
+  updateProcessLog({ id: step8.id, timestamp: step8.timestamp, title: step8.title_p, reasoning: [], artifacts: [], status: 'processing' });
   await delay(2000);
 
-  await updateProcessLog(step8.id, { status: 'warning' });
+  updateProcessLog({ id: step8.id, timestamp: step8.timestamp, title: step8.title_s, reasoning: step8.reasoning, artifacts: step8.artifacts, status: 'warning' });
   await updateProcessListStatus('Needs Attention');
   console.log('  ↳ Waiting for analyst decision (3 options)...');
 
   const receivedSignal = await waitForAnySignal(['OPTION_A_004', 'OPTION_B_004', 'OPTION_C_004']);
   console.log(`  ✓ Decision received: ${receivedSignal}`);
 
-  await updateProcessLog(step8.id, { status: 'completed' });
+  updateProcessLog({ id: step8.id, timestamp: step8.timestamp, title: step8.title_s, reasoning: step8.reasoning, artifacts: step8.artifacts, status: 'completed' });
   await updateProcessListStatus('Done');
   await delay(1500);
 
