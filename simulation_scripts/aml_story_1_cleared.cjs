@@ -46,7 +46,7 @@ async function updateProcessListStatus(processId, status) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
   } catch (error) {
     console.log(`API call failed, falling back to file write: ${error.message}`);
-    const casesFilePath = path.join(PUBLIC_DATA_DIR, 'cases.json');
+    const casesFilePath = path.join(PUBLIC_DATA_DIR, 'processes.json');
     let cases = readJson(casesFilePath) || [];
     const caseIndex = cases.findIndex(c => c.id === processId);
     if (caseIndex !== -1) {
