@@ -709,7 +709,7 @@ Bird Infrastructure Procurement Team`;
         if (!msgText.trim()) return;
         setSending(true);
         try {
-            await fetch('${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/zamp/message', {
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/zamp/message`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
