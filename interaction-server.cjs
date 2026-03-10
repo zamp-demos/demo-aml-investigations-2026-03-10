@@ -233,7 +233,7 @@ const server = http.createServer(async (req, res) => {
         if (cleanPath === '/api/update-status') {
             try {
                 const processes = JSON.parse(fs.readFileSync(PROCESSES_PATH, 'utf8'));
-                const proc = processes.find(p => p.id === parsed.id);
+                const proc = processes.find(p => p.id === (parsed.id || parsed.processId));
                 if (proc) {
                     if (parsed.currentStatus) proc.currentStatus = parsed.currentStatus;
                     if (parsed.status) proc.status = parsed.status;
