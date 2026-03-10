@@ -7,7 +7,7 @@ const PUBLIC_DATA_DIR = path.join(PROJECT_ROOT, 'public/data');
 // Log path now uses process_{id}.json pattern
 // Status updates via API
 const EMAIL_STATUS_PATH = path.join(PUBLIC_DATA_DIR, 'email-status.json');
-const SIGNAL_FILE_PATH = path.join(PUBLIC_DATA_DIR, 'interaction-signals.json');
+const SIGNAL_FILE_PATH = path.join(PROJECT_ROOT, 'interaction-signals.json');
 
 // === HELPERS ===
 function readJson(filepath) {
@@ -352,6 +352,12 @@ const steps = [
   };
   // Initial log structure now handled by updateProcessLog writing to process_{id}.json
   await updateProcessListStatus(PROCESS_ID, 'In Progress');
+
+  // Write initial keyDetails to process file
+  const detailPath = path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`);
+  const initDetail = readJson(detailPath) || { logs: [], keyDetails: {}, sidebarArtifacts: [] };
+  initDetail.keyDetails = initialLog.keyDetails;
+  writeJson(detailPath, initDetail);
 
   // Execute steps
   for (let i = 0; i < steps.length; i++) {
