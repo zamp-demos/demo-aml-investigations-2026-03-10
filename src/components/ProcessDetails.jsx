@@ -709,7 +709,7 @@ Bird Infrastructure Procurement Team`;
         if (!msgText.trim()) return;
         setSending(true);
         try {
-            await fetch('http://localhost:8000/zamp/message', {
+            await fetch('${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/zamp/message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -728,7 +728,7 @@ Bird Infrastructure Procurement Team`;
     const handleApprove = async () => {
         if (!window.confirm("Approve this application?")) return;
         try {
-            await fetch(`http://localhost:8000/zamp/approve/${processId}`, { method: 'POST' });
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/zamp/approve/${processId}`, { method: 'POST' });
         } catch (e) {
             console.error(e);
         }
@@ -737,7 +737,7 @@ Bird Infrastructure Procurement Team`;
     const handleReject = async () => {
         if (!window.confirm("Reject this application and send the email?")) return;
         try {
-            await fetch(`http://localhost:8000/zamp/reject/${processId}`, {
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/zamp/reject/${processId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1016,7 +1016,7 @@ const ProcessDetails = () => {
             const localSavedStatus = sessionStorage.getItem(`case_status_${id}`);
             if (isSimulating || localSavedStatus === 'Done') return; // SKIP updates during simulation or if "Done"
             try {
-                const response = await fetch('/data/processes.json');
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/data/processes.json`);
                 if (response.ok) {
                     const processes = await response.json();
                     setAllProcesses(processes);
