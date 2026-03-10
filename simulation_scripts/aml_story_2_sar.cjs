@@ -21,48 +21,45 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function updateProcessLog(processId, stepId, status, artifacts = null, keyDetailsUpdate = null) {
-  const logPath = path.join(PUBLIC_DATA_DIR, 'process-logs.json');
-  const data = readJson(logPath);
+function updateProcessLog(processId, newLog) {
+  const detailPath = path.join(PUBLIC_DATA_DIR, `process_${processId}.json`);
+  let detail = readJson(detailPath) || { logs: [], keyDetails: {}, sidebarArtifacts: [] };
   
-  if (!data[processId]) {
-    data[processId] = { steps: [], keyDetails: {} };
+  const existingIdx = detail.logs.findIndex(l => l.id === newLog.id && l.status === 'processing');
+  if (newLog.status !== 'processing' && existingIdx !== -1) {
+    detail.logs[existingIdx] = newLog;
+  } else if (newLog.status === 'processing') {
+    detail.logs = detail.logs.filter(l => !(l.id === newLog.id && l.status === 'processing'));
+    detail.logs.push(newLog);
+  } else {
+    detail.logs.push(newLog);
   }
   
-  const stepIndex = data[processId].steps.findIndex(s => s.id === stepId);
-  if (stepIndex >= 0) {
-    data[processId].steps[stepIndex].status = status;
-    if (artifacts) {
-      data[processId].steps[stepIndex].artifacts = artifacts;
-    }
+  if (newLog.keyDetailsUpdate) {
+    detail.keyDetails = { ...detail.keyDetails, ...newLog.keyDetailsUpdate };
   }
   
-  if (keyDetailsUpdate) {
-    data[processId].keyDetails = { ...data[processId].keyDetails, ...keyDetailsUpdate };
-  }
-  
-  writeJson(logPath, data);
+  writeJson(detailPath, detail);
 }
 
 async function updateProcessListStatus(processId, status) {
-  const listPath = path.join(PUBLIC_DATA_DIR, 'process-list.json');
-  const list = readJson(listPath);
-  
-  const processIndex = list.findIndex(p => p.id === processId);
-  if (processIndex >= 0) {
-    list[processIndex].status = status;
-    writeJson(listPath, list);
-  }
-  
-  // Try API call with fallback
+  const API_URL = process.env.API_URL || 'http://localhost:3001';
   try {
-    await fetch('http://localhost:3030/api/update-status', {
+    const response = await fetch(`${API_URL}/api/update-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ processId, status })
     });
-  } catch (e) {
-    // Fallback already done with file write
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  } catch (error) {
+    console.log(`API call failed, falling back to file write: ${error.message}`);
+    const casesFilePath = path.join(PUBLIC_DATA_DIR, 'processes.json');
+    let cases = readJson(casesFilePath) || [];
+    const caseIndex = cases.findIndex(c => c.id === processId);
+    if (caseIndex !== -1) {
+      cases[caseIndex].status = status;
+      writeJson(casesFilePath, cases);
+    }
   }
 }
 
@@ -265,7 +262,7 @@ async function runSimulation() {
     priority: 'High — L2'
   };
   
-  await updateProcessLog(PROCESS_ID, 1, 'processing', null, initialKeyDetails);
+  updateProcessLog(PROCESS_ID, { id: 1, timestamp: steps[0].timestamp, title: steps[0].title_p, reasoning: [], artifacts: [], status: 'processing', keyDetailsUpdate: initialKeyDetails });
   await updateProcessListStatus(PROCESS_ID, 'In Progress');
   
   for (let i = 0; i < steps.length; i++) {
@@ -273,14 +270,14 @@ async function runSimulation() {
     console.log(`[${PROCESS_ID}] Step ${step.id}: ${step.title_p}`);
     
     // Processing state
-    await updateProcessLog(PROCESS_ID, step.id, 'processing');
+    updateProcessLog(PROCESS_ID, { id: step.id, timestamp: step.timestamp, title: step.title_p, reasoning: [], artifacts: [], status: 'processing' });
     await delay(2000);
     
     // Handle step 7 keyDetails update
     if (step.id === 7) {
-      await updateProcessLog(PROCESS_ID, step.id, 'success', step.artifacts, { riskScore: '94/100' });
+      updateProcessLog(PROCESS_ID, { id: step.id, timestamp: step.timestamp, title: step.title_s, reasoning: step.reasoning, artifacts: step.artifacts, status: 'success', keyDetailsUpdate: { riskScore: '94/100' } });
     } else {
-      await updateProcessLog(PROCESS_ID, step.id, 'success', step.artifacts);
+      updateProcessLog(PROCESS_ID, { id: step.id, timestamp: step.timestamp, title: step.title_s, reasoning: step.reasoning, artifacts: step.artifacts, status: 'success' });
     }
     
     await delay(1500);
@@ -288,14 +285,14 @@ async function runSimulation() {
     // HITL at step 9
     if (step.id === 9) {
       console.log(`[${PROCESS_ID}] Step 9: Waiting for SAR approval signal...`);
-      await updateProcessLog(PROCESS_ID, step.id, 'warning', step.artifacts);
+      updateProcessLog(PROCESS_ID, { id: step.id, timestamp: step.timestamp, title: step.title_s, reasoning: step.reasoning, artifacts: step.artifacts, status: 'warning' });
       await updateProcessListStatus(PROCESS_ID, 'Needs Attention');
       
       const signal = await waitForSignal('APPROVE_SAR_002');
       console.log(`[${PROCESS_ID}] Signal received: ${signal}`);
       
       // Set final status
-      await updateProcessLog(PROCESS_ID, step.id, 'completed', step.artifacts);
+      updateProcessLog(PROCESS_ID, { id: step.id, timestamp: step.timestamp, title: step.title_s, reasoning: step.reasoning, artifacts: step.artifacts, status: 'completed' });
       await updateProcessListStatus(PROCESS_ID, 'Done');
     }
   }
