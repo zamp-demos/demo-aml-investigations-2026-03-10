@@ -29,10 +29,27 @@ function delay(ms) {
 }
 
 function updateProcessLog(processId, newLog) {
-  const logFilePath = path.join(PUBLIC_DATA_DIR, `${processId}_log.json`);
-  let logs = readJson(logFilePath) || [];
-  logs.push(newLog);
-  writeJson(logFilePath, logs);
+  const detailPath = path.join(PUBLIC_DATA_DIR, `process_${processId}.json`);
+  let detail = readJson(detailPath) || { logs: [], keyDetails: {}, sidebarArtifacts: [] };
+  
+  // Find existing log entry with same id and update it, or append new
+  const existingIdx = detail.logs.findIndex(l => l.id === newLog.id && l.status === 'processing');
+  if (newLog.status !== 'processing' && existingIdx !== -1) {
+    detail.logs[existingIdx] = newLog;
+  } else if (newLog.status === 'processing') {
+    // Remove any prior processing entry for this step before adding
+    detail.logs = detail.logs.filter(l => !(l.id === newLog.id && l.status === 'processing'));
+    detail.logs.push(newLog);
+  } else {
+    detail.logs.push(newLog);
+  }
+  
+  // Update keyDetails if present
+  if (newLog.keyDetailsUpdate) {
+    detail.keyDetails = { ...detail.keyDetails, ...newLog.keyDetailsUpdate };
+  }
+  
+  writeJson(detailPath, detail);
 }
 
 async function updateProcessListStatus(processId, status) {
