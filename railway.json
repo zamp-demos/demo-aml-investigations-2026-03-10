@@ -1,10 +1,9 @@
 {
   "build": {
-    "buildCommand": "npm install --production=false"
+    "buildCommand": "echo 'Backend only - skipping frontend build'"
   },
   "deploy": {
     "startCommand": "node interaction-server.cjs",
-    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE"
   }
 }
