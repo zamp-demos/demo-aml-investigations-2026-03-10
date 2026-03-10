@@ -1,0 +1,62 @@
+[
+    {
+        "id": "AML_001",
+        "category": "AML Investigations",
+        "name": "BorderLine Logistics LLC — $1.9M Wire to Mexico",
+        "stockId": "INV-2025-03-0412",
+        "year": "2025-03-03",
+        "status": "In Progress",
+        "currentStatus": "Initializing...",
+        "subject": "BorderLine Logistics LLC",
+        "alertId": "ALT-2025-03-0871",
+        "amount": "$1,900,000",
+        "counterparty": "Transportes del Norte SA de CV",
+        "riskScore": "68/100",
+        "priority": "High — L2"
+    },
+    {
+        "id": "AML_002",
+        "category": "AML Investigations",
+        "name": "Ray Muller / Suncoast Auto Sales — Cash Structuring",
+        "stockId": "INV-2025-04-0783",
+        "year": "2025-04-14",
+        "status": "In Progress",
+        "currentStatus": "Initializing...",
+        "subject": "Ray Muller / Suncoast Auto Sales",
+        "alertId": "ALT-2025-04-1142",
+        "amount": "$347,000 (38 deposits)",
+        "counterparty": "N/A (cash deposits)",
+        "riskScore": "78/100",
+        "priority": "High — L2"
+    },
+    {
+        "id": "AML_003",
+        "category": "AML Investigations",
+        "name": "Kevin Dao Network — P2P Layering to Crypto Exchange",
+        "stockId": "INV-2025-05-1204",
+        "year": "2025-05-19",
+        "status": "In Progress",
+        "currentStatus": "Initializing...",
+        "subject": "Kevin Dao + 3 linked accounts",
+        "alertId": "ALT-2025-05-2087",
+        "amount": "$74,500",
+        "counterparty": "Coinbase (crypto exchange)",
+        "riskScore": "71/100",
+        "priority": "High — L2"
+    },
+    {
+        "id": "AML_004",
+        "category": "AML Investigations",
+        "name": "Hartwell Manufacturing Inc — $840K Wire to Hong Kong",
+        "stockId": "INV-2025-06-0298",
+        "year": "2025-06-09",
+        "status": "In Progress",
+        "currentStatus": "Initializing...",
+        "subject": "Hartwell Manufacturing Inc",
+        "alertId": "ALT-2025-06-0514",
+        "amount": "$840,000",
+        "counterparty": "Zhengda Industrial Supply Co Ltd (Hong Kong)",
+        "riskScore": "65/100",
+        "priority": "High — L2"
+    }
+]
