@@ -14,7 +14,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/done" element={<DashboardLayout />}>
-          <Route path="aml-investigations" element={<ProcessList />} />
+          <Route path="aml-investigations" element={<ProcessList category="AML Investigations" />} />
           <Route path="aml-investigations/:id" element={<ProcessDetails />} />
           <Route path="knowledge-base" element={<KnowledgeBase />} />
           <Route path="people" element={<People />} />
