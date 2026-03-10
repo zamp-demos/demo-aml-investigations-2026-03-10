@@ -64,7 +64,7 @@ async function updateProcessListStatus(processId, status) {
 }
 
 async function waitForSignal(signalId) {
-  const signalPath = path.join(PUBLIC_DATA_DIR, 'interaction-signals.json');
+  const signalPath = path.join(PROJECT_ROOT, 'interaction-signals.json');
   
   while (true) {
     await delay(500);
