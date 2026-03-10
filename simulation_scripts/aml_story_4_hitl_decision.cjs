@@ -72,7 +72,7 @@ async function waitForAnySignal(signalNames) {
   const POLL_INTERVAL = 1000;
   const MAX_WAIT = 3600000; // 1 hour
   const startTime = Date.now();
-  const signalPath = path.join(PUBLIC_DATA_DIR, 'interaction-signals.json');
+  const signalPath = path.join(PROJECT_ROOT, 'interaction-signals.json');
 
   console.log(`⏳ Waiting for one of: ${signalNames.join(', ')}`);
 
