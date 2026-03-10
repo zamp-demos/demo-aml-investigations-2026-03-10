@@ -1,9 +1,0 @@
-{
-  "build": {
-    "buildCommand": "npm install --omit=dev"
-  },
-  "deploy": {
-    "startCommand": "node interaction-server.cjs",
-    "restartPolicyType": "ON_FAILURE"
-  }
-}
