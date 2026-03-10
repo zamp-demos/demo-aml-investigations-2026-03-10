@@ -1,6 +1,14 @@
 // interaction-server.cjs — AML Investigations Demo Server
 try { require('dotenv').config(); } catch(e) {}
 
+// Prevent silent crashes — log errors so Railway shows them
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err.stack || err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('UNHANDLED REJECTION:', err);
+});
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
