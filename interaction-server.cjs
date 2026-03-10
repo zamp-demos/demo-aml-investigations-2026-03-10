@@ -158,6 +158,25 @@ const server = http.createServer(async (req, res) => {
             return jsonResponse(res, { dataDir: DATA_DIR, exists: fs.existsSync(DATA_DIR), files: fs.existsSync(DATA_DIR) ? fs.readdirSync(DATA_DIR) : [] });
         }
 
+        if (cleanPath === '/debug-scripts') {
+            const simDir = path.join(__dirname, 'simulation_scripts');
+            const scriptLogs = {};
+            try {
+                const files = fs.readdirSync(simDir).filter(f => f.endsWith('.log'));
+                for (const f of files) {
+                    try { scriptLogs[f] = fs.readFileSync(path.join(simDir, f), 'utf8').slice(-3000); }
+                    catch(e) { scriptLogs[f] = 'READ_ERROR: ' + e.message; }
+                }
+            } catch(e) { scriptLogs._error = e.message; }
+            const processFiles = {};
+            ['AML_001','AML_002','AML_003','AML_004'].forEach(id => {
+                const fp = path.join(DATA_DIR, 'process_' + id + '.json');
+                try { const d = JSON.parse(fs.readFileSync(fp,'utf8')); processFiles[id] = { logs: d.logs ? d.logs.length : 0, keyDetailsKeys: Object.keys(d.keyDetails || {}), artifacts: d.sidebarArtifacts ? d.sidebarArtifacts.length : 0 }; }
+                catch(e) { processFiles[id] = 'READ_ERROR: ' + e.message; }
+            });
+            return jsonResponse(res, { scriptLogs, processFiles, simDir, dataDir: DATA_DIR });
+        }
+
         if (cleanPath === '/api/feedback/queue') {
             try { return jsonResponse(res, { queue: JSON.parse(fs.readFileSync(FEEDBACK_QUEUE_PATH, 'utf8')) }); }
             catch(e) { return jsonResponse(res, { queue: [] }); }
