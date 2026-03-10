@@ -1,6 +1,6 @@
 {
   "build": {
-    "buildCommand": "echo 'Backend only - skipping frontend build'"
+    "buildCommand": "npm install --omit=dev"
   },
   "deploy": {
     "startCommand": "node interaction-server.cjs",
